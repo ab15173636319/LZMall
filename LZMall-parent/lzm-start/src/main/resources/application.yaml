@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: lzm-start
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/LZMall?useSSL=false&serverTimezone=UTC
+    username: root
+    password: 123456
+  data:
+    redis:
+      database: 0
+      host: localhost
+      port: 6379
+      password: 123456
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 30000
+  security:
+    user:
+      name: admin
+      password: 123456
+
+  netty:
+    leak-detection: advanced
