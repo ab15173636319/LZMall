@@ -1,24 +1,22 @@
 package org.lzmservice.impl;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.lzmcommon.exception.BusinessException;
 import org.lzmcommon.result.ResultCode;
+import org.lzmcommon.utils.RedisUtils;
 import org.lzmsecurity.jwt.JwtUtils;
 import org.lzmservice.mapper.UserMapper;
 import org.lzmservice.pojo.dto.LoginDto;
 import org.lzmservice.pojo.dto.RegisterDto;
 import org.lzmservice.pojo.entity.User;
 import org.lzmservice.service.UserService;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
-import org.springframework.web.context.request.RequestContextHolder;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 public class UserImpl implements UserService {
@@ -29,7 +27,7 @@ public class UserImpl implements UserService {
 
     private final JwtUtils jwtUtils;
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisUtils redisUtils;
 
     private static final String ACCESS_CACHE_KEY = "accessToken:";
 
@@ -52,7 +50,6 @@ public class UserImpl implements UserService {
             throw new BusinessException(ResultCode.BAD_REQUEST, "用户名或密码错误");
         }
 
-        Map<String, Object> map = new HashMap<>();
         Map<String, Object> claims = new HashMap<>();
         claims.put("uid", user.getId());
         claims.put("nickname", user.getNickname());
@@ -60,12 +57,14 @@ public class UserImpl implements UserService {
         String refreshToken = jwtUtils.generateRefreshToken(claims);
         String accessToken = jwtUtils.generateAccessToken(claims);
 
-        redisTemplate.opsForValue().set(ACCESS_CACHE_KEY + user.getId(), accessToken);
+        redisUtils.set(ACCESS_CACHE_KEY + user.getId(), accessToken, jwtUtils.getAccessExpiration(), TimeUnit.MILLISECONDS);
 
-        map.put("accessToken", accessToken);
-        map.put("refreshToken", refreshToken);
 
-        return map;
+        Map<String, Object> result = new HashMap<>();
+        result.put("accessToken", accessToken);
+        result.put("refreshToken", refreshToken);
+
+        return result;
     }
 
     @Override
