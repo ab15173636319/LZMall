@@ -11,6 +11,7 @@ import org.lzmservice.pojo.dto.RegisterDto;
 import org.lzmservice.pojo.entity.User;
 import org.lzmservice.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+@Service
 @RequiredArgsConstructor
 public class UserImpl implements UserService {
 
