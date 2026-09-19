@@ -177,21 +177,23 @@
                         <mainClass>org.lzmstart.LzmStartApplication</mainClass>
                     </configuration>
                 </plugin>
-                <!-- JDK 23+ 默认不再自动从 classpath 运行注解处理器，需显式声明 Lombok -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <configuration>
-                        <annotationProcessorPaths>
-                            <path>
-                                <groupId>org.projectlombok</groupId>
-                                <artifactId>lombok</artifactId>
-                            </path>
-                        </annotationProcessorPaths>
-                    </configuration>
-                </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <!-- JDK 23+ 默认不再自动从 classpath 运行注解处理器，需显式声明 Lombok -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 
     <repositories>

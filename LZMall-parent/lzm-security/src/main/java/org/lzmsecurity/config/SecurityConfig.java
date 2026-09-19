@@ -1,10 +1,16 @@
 package org.lzmsecurity.config;
 
+import lombok.RequiredArgsConstructor;
+import org.lzmcommon.result.Result;
+import org.lzmcommon.result.ResultCode;
+import org.lzmsecurity.jwt.JwtAuthenticalcationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
  * Spring Security 安全配置类
@@ -12,7 +18,12 @@ import org.springframework.security.web.SecurityFilterChain;
  */
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final IgnoreUrlsConfig ignoreUrlsConfig;
+    private final JwtAuthenticalcationFilter jwtAuthenticalcationFilter;
+
     /**
      * 配置安全过滤链
      * - 放行所有请求，无需登录认证
@@ -25,16 +36,22 @@ public class SecurityConfig {
         http
                 // 授权配置：所有请求无需认证即可访问
                 .authorizeHttpRequests(
-                        auth ->
-                                auth.requestMatchers("/test/**").permitAll()
-                                        .anyRequest().permitAll()
+                        auth -> {
+                            for (String url : ignoreUrlsConfig.getUrls()) {
+                                auth.requestMatchers(url).permitAll();
+                            }
+                        }
                 )
                 // 禁用默认登录页面
                 .formLogin(form -> form.disable())
                 // 禁用 HTTP Basic 弹窗认证
                 .httpBasic(basic -> basic.disable())
-                // 禁用 CSRF 跨站请求伪造防护
-                .csrf(csrf -> csrf.disable());
+                // 禁用 CSRF 防护
+                .csrf(AbstractHttpConfigurer::disable)
+                .addFilterBefore(jwtAuthenticalcationFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exception -> {
+                    Result.failed("认证失败");
+                });
         return http.build();
     }
 
