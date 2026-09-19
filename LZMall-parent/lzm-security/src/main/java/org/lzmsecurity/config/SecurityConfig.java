@@ -6,6 +6,7 @@ import org.lzmcommon.result.ResultCode;
 import org.lzmsecurity.jwt.JwtAuthenticalcationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -40,6 +41,7 @@ public class SecurityConfig {
                             for (String url : ignoreUrlsConfig.getUrls()) {
                                 auth.requestMatchers(url).permitAll();
                             }
+                            auth.requestMatchers(HttpMethod.OPTIONS).permitAll(); // 允许 OPTIONS 请求
                         }
                 )
                 // 禁用默认登录页面
