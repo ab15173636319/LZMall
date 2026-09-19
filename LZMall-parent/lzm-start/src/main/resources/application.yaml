@@ -24,6 +24,16 @@ spring:
 
   netty:
     leak-detection: advanced
+
+mybatis-plus:
+  check-config-location: true
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    
+      
+
+
 jwt:
   secret: s9iuhfoiu349857tue89rjhfoidshf5t
   access-expiration: 1800000 # 30分钟
