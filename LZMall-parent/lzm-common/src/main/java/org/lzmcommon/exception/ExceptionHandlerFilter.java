@@ -3,9 +3,13 @@ package org.lzmcommon.exception;
 import org.lzmcommon.result.Result;
 import org.lzmcommon.result.ResultCode;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.stream.Collectors;
 
 @Configuration
 @RestControllerAdvice
@@ -51,6 +55,15 @@ public class ExceptionHandlerFilter {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public Result<String> httpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         return Result.failed(ResultCode.BAD_REQUEST.getCode(), "请求方式错误");
+    }
+
+    // 处理方法参数验证异常
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Result<String> methodArgumentNotValidException(MethodArgumentNotValidException e) {
+        String message = e.getBindingResult().getFieldErrors().stream()
+                .map(FieldError::getDefaultMessage)
+                .collect(Collectors.joining(";"));
+        return Result.failed(ResultCode.BAD_REQUEST.getCode(), message);
     }
 
 
