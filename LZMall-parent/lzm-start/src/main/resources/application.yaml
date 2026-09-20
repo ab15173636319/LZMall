@@ -1,4 +1,8 @@
 spring:
+  # null不传递给前端
+  jackson:
+    default-property-inclusion: non_null
+
   application:
     name: lzm-start
   datasource:
@@ -27,13 +31,15 @@ spring:
 
 mybatis-plus:
   check-config-location: true
-  mapper-locations: classpath:mapper/*.xml
+  mapper-locations:
+    - classpath:mapper/*.xml # 扫描mapper包下的所有mapper文件
+    - classpath*:com/**/mapper/*.xml # 扫描com包下的所有mapper文件
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-    
-      
 
 
+
+# jwt配置
 jwt:
   secret: s9iuhfoiu349857tue89rjhfoidshf5t
   access-expiration: 1800000 # 30分钟
@@ -41,3 +47,18 @@ jwt:
   header: Authorization
   prefix: Bearer
 
+security:
+  ignore:
+    urls:
+      - /user/login
+      - /user/register
+      - /admin/login
+      - /admin/register
+      - /swagger/**
+      - /v3/api-docs/**
+      - /*/*.html
+      - /*/*.css
+      - /*/*.js
+      - /*/*.png
+      - /favicon.ico
+      - /test/**

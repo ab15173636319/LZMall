@@ -134,15 +134,15 @@ public class JwtUtils {
      */
     public String refreshAccessToken(String refreshToken) {
         if (!StringUtils.hasText(refreshToken)) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED, "刷新令牌不能为空");
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "刷新令牌不能为空");
         }
         // 校验refreshToken是否有效（签名+未过期）
         if (isTokenExpired(refreshToken)) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED, "刷新令牌已失效，请重新登录");
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "刷新令牌已失效，请重新登录");
         }
         Map<String, Object> claims = getTokenClaims(refreshToken);
         if (claims == null) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED, "刷新令牌解析失败");
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "刷新令牌解析失败");
         }
         // 生成新accessToken
         return generateAccessToken(claims);
@@ -159,7 +159,7 @@ public class JwtUtils {
         Date refreshExpired = getTokenExpired(refreshToken);
         Map<String, Object> claims = getTokenClaims(refreshToken);
         if (Objects.isNull(refreshExpired) || Objects.isNull(claims)) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED, "刷新令牌验证失败");
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "刷新令牌验证失败");
         }
         Date currentTime = new Date();
         // 当剩余时间不足20%时返回新refreshToken
@@ -182,7 +182,7 @@ public class JwtUtils {
 
     public boolean isRemoteLogin(String httpToken, String cacheToken) {
         if (!StringUtils.hasText(httpToken) || !StringUtils.hasText(cacheToken)) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED, "未登录或登录过期");
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "未登录或登录过期");
         }
 
         return !Objects.equals(httpToken, cacheToken);

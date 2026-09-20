@@ -9,7 +9,7 @@ import java.util.List;
 
 @Setter
 @Getter
-@ConfigurationProperties(prefix = "ignore-urls")
+@ConfigurationProperties(prefix = "security.ignore")
 public class IgnoreUrlsConfig {
 
     private List<String> urls = new ArrayList<>();

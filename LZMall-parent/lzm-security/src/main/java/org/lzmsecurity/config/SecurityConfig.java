@@ -1,8 +1,10 @@
 package org.lzmsecurity.config;
 
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.lzmcommon.result.Result;
-import org.lzmcommon.result.ResultCode;
 import org.lzmsecurity.jwt.JwtAuthenticalcationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +14,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.io.IOException;
 
 /**
  * Spring Security 安全配置类
@@ -45,16 +49,32 @@ public class SecurityConfig {
                         }
                 )
                 // 禁用默认登录页面
-                .formLogin(form -> form.disable())
+                .formLogin(AbstractHttpConfigurer::disable)
                 // 禁用 HTTP Basic 弹窗认证
-                .httpBasic(basic -> basic.disable())
+                .httpBasic(AbstractHttpConfigurer::disable)
                 // 禁用 CSRF 防护
                 .csrf(AbstractHttpConfigurer::disable)
                 .addFilterBefore(jwtAuthenticalcationFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(exception -> {
-                    Result.failed("认证失败");
-                });
+                .exceptionHandling(exception ->
+                        exception
+                                .authenticationEntryPoint(
+                                        (request, response, authException) ->
+                                                writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "请先登录")
+                                )
+                                .accessDeniedHandler(
+                                        (request, response, accessDeniedException) -> {
+                                            writeErrorResponse(response, HttpServletResponse.SC_FORBIDDEN, "权限不足");
+                                        }
+                                )
+                );
         return http.build();
+    }
+
+    private static void writeErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
+        response.setContentType("application/json;charset=utf-8");
+        response.setStatus(status);
+        Result<String> result = Result.failed(message);
+        response.getWriter().write(JSONUtil.toJsonStr(result));
     }
 
 }

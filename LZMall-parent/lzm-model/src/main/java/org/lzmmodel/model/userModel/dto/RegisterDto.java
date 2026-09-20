@@ -1,4 +1,4 @@
-package org.lzmservice.pojo.dto;
+package org.lzmmodel.model.userModel.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;

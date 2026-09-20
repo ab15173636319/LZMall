@@ -38,22 +38,22 @@ public class JwtAuthenticalcationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = request.getHeader(jwtUtils.getHeader());
-        if (!StringUtils.hasText(token)) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED, "未登录或登录过期");
-        }
 
         String prefix = jwtUtils.getPrefix() + " ";
         // 携带token，进入验证流程
-        if (token.startsWith(prefix)) {
+        if (StringUtils.hasText(token)) {
+            if (token.startsWith(prefix)) {
+                throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "令牌格式错误");
+            }
             token = token.substring(prefix.length());
             Map<String, Object> claims = jwtUtils.getTokenClaims(token);
             if (claims == null) {
-                throw new BusinessException(ResultCode.UNAUTHORIZED, "未登录或登录过期");
+                throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "未登录或登录过期");
             }
             String username = (String) claims.get("username");
 
             if (!StringUtils.hasText(username)) {
-                throw new BusinessException(ResultCode.UNAUTHORIZED, "令牌载荷无效");
+                throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "令牌载荷无效");
             }
             // 如果安全上下文为空，说明未认证，需要认证
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -65,8 +65,6 @@ public class JwtAuthenticalcationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(upat);
                 logger.info("用户【{}】认证成功", username);
             }
-        } else {
-            throw new BusinessException(ResultCode.UNAUTHORIZED, "令牌格式错误");
         }
         // 未带token，直接放行交给spring security处理
         filterChain.doFilter(request, response);

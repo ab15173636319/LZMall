@@ -6,9 +6,9 @@ import org.lzmcommon.result.ResultCode;
 import org.lzmcommon.utils.RedisUtils;
 import org.lzmsecurity.jwt.JwtUtils;
 import org.lzmservice.mapper.UserMapper;
-import org.lzmservice.pojo.dto.LoginDto;
-import org.lzmservice.pojo.dto.RegisterDto;
-import org.lzmservice.pojo.entity.User;
+import org.lzmmodel.model.userModel.dto.LoginDto;
+import org.lzmmodel.model.userModel.dto.RegisterDto;
+import org.lzmmodel.model.userModel.entity.User;
 import org.lzmservice.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,19 +37,19 @@ public class UserImpl implements UserService {
     public Map<String, Object> login(LoginDto loginDto) {
 
         if (!StringUtils.hasText(loginDto.getUsername()) || !StringUtils.hasText(loginDto.getPassword())) {
-            throw new BusinessException(ResultCode.BAD_REQUEST, "用户名或密码不能为空");
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "用户名或密码不能为空");
         }
 
         Optional<User> userOptional = userMapper.selectByUsername(loginDto.getUsername());
 
-        if (!userOptional.isPresent()) {
-            throw new BusinessException(ResultCode.BAD_REQUEST, "用户名或密码错误");
+        if (userOptional.isEmpty()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "用户名或密码错误");
         }
 
         User user = userOptional.get();
 
         if (!passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
-            throw new BusinessException(ResultCode.BAD_REQUEST, "用户名或密码错误");
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "用户名或密码错误");
         }
 
         Map<String, Object> claims = new HashMap<>();
@@ -65,6 +65,7 @@ public class UserImpl implements UserService {
         Map<String, Object> result = new HashMap<>();
         result.put("accessToken", accessToken);
         result.put("refreshToken", refreshToken);
+        result.put("intro", "注意refresh为刷新token（有效时间7天），存入localStorage，access为访问token（有效时间30分钟），可存入cookie、session，最好不要做持久化");
 
         return result;
     }

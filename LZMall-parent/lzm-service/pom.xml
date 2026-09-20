@@ -24,6 +24,10 @@
             <groupId>org</groupId>
             <artifactId>lzm-security</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org</groupId>
+            <artifactId>lzm-model</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.baomidou</groupId>

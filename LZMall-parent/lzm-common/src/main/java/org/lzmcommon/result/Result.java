@@ -9,27 +9,27 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class Result<T> implements Serializable {
 
-    private ResultCode code;
+    private int code;
     private String message;
     private T data;
 
     public static <T> Result<T> success(T data) {
-        return new Result<T>(ResultCode.SUCCESS, ResultCode.SUCCESS.getMessage(), data);
+        return new Result<T>(ResultCode.SUCCESS.getCode(), ResultCode.SUCCESS.getMessage(), data);
     }
 
     public static <T> Result<T> success(String message, T data) {
-        return new Result<T>(ResultCode.SUCCESS, message, data);
+        return new Result<T>(ResultCode.SUCCESS.getCode(), message, data);
     }
 
     public static <T> Result<T> systemError(String message) {
-        return new Result<T>(ResultCode.SERVICE_UNAVAILABLE, message, null);
+        return new Result<T>(ResultCode.SERVICE_UNAVAILABLE.getCode(), message, null);
     }
 
     public static <T> Result<T> failed(String message) {
-        return new Result<T>(ResultCode.FAILED, message, null);
+        return new Result<T>(ResultCode.FAILED.getCode(), message, null);
     }
 
-    public static <T> Result<T> failed(ResultCode code, String message) {
+    public static <T> Result<T> failed(int code, String message) {
         return new Result<T>(code, message, null);
     }
 

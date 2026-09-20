@@ -6,11 +6,11 @@ import org.lzmcommon.result.ResultCode;
 @Getter
 public class BusinessException extends RuntimeException {
 
-    private ResultCode code;
+    private int code;
     private String message;
 
 
-    public BusinessException(ResultCode code, String message) {
+    public BusinessException(int code, String message) {
         super(message);
         this.code = code;
         this.message = message;
@@ -18,7 +18,7 @@ public class BusinessException extends RuntimeException {
 
     public BusinessException(String message) {
         super(message);
-        this.code = ResultCode.INTERNAL_SERVER_ERROR;
+        this.code = ResultCode.INTERNAL_SERVER_ERROR.getCode();
         this.message = message;
     }
 

@@ -1,7 +1,7 @@
 package org.lzmservice.service;
 
-import org.lzmservice.pojo.dto.LoginDto;
-import org.lzmservice.pojo.dto.RegisterDto;
+import org.lzmmodel.model.userModel.dto.LoginDto;
+import org.lzmmodel.model.userModel.dto.RegisterDto;
 
 import java.util.Map;
 

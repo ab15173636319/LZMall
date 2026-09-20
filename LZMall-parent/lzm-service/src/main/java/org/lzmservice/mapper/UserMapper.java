@@ -2,7 +2,7 @@ package org.lzmservice.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
-import org.lzmservice.pojo.entity.User;
+import org.lzmmodel.model.userModel.entity.User;
 
 import java.util.Optional;
 
