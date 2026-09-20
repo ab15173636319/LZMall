@@ -11,3 +11,12 @@ interface IUserInfo {
 }
 
 export type UserInfo = IUserInfo
+
+interface ILoginDto {
+    username: string
+    password: string
+}
+
+export type LoginDto = ILoginDto
+
+

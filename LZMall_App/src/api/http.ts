@@ -4,10 +4,11 @@ import { ElMessage } from "element-plus";
 import { useUser } from "@/store";
 import router from "@/router";
 
-
 const http = axios.create({
+    // 环境变量在构建时被静态替换，名字必须与 .env 中完全一致（见 src/types/env.d.ts）
     baseURL: import.meta.env.VITE_API_BASE_URL,
-    timeout: import.meta.env.VITE_API_TIMEOUT,
+    // .env 里的值都是字符串，超时需要转成 number
+    timeout: Number(import.meta.env.VITE_API_TIMEOUT),
     headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
@@ -34,6 +35,7 @@ http.interceptors.response.use(
     (response) => {
         const res = response.data;
         if (res.code === 200) {
+            ElMessage.success(res.message)
             return res;
         }
         return ElMessage.warning(res.message);

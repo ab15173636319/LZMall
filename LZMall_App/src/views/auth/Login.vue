@@ -6,8 +6,8 @@
                 <el-form-item label="用户名" prop="username">
                     <el-input size="large" v-model="formDate.username" clearable type="text" autocomplete="off" />
                 </el-form-item>
-                <el-form-item label="密码" prop="username">
-                    <el-input size="large" v-model="formDate.username" clearable type="password" autocomplete="off" />
+                <el-form-item label="密码" prop="password">
+                    <el-input size="large" v-model="formDate.password" clearable type="password" autocomplete="off" />
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" @click="submitForm(ruleFormRef)">
@@ -24,6 +24,7 @@
 import { reactive, ref } from 'vue'
 
 import type { FormInstance, FormRules } from 'element-plus'
+import { login } from '@/api/userAuth'
 
 const ruleFormRef = ref<FormInstance>()
 
@@ -52,11 +53,10 @@ const rules = reactive<FormRules<typeof formDate>>({
 
 const submitForm = (formEl: FormInstance | undefined) => {
     if (!formEl) return
-    formEl.validate((valid) => {
+    formEl.validate(async (valid) => {
         if (valid) {
-            console.log('submit!')
-        } else {
-            console.log('error submit!')
+            const res = await login(formDate)
+            console.log(res);
         }
     })
 }
