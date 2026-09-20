@@ -14,4 +14,8 @@ export const useUser = defineStore('user', () => {
 
 
     return { userInfo, isLogin, hasRole, accessToken, refreshToken }
+}, {
+    persist: {
+        pick: ["accessToken"]
+    }
 })

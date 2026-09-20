@@ -20,3 +20,9 @@ interface ILoginDto {
 export type LoginDto = ILoginDto
 
 
+interface IAuthData{
+    accessToken: string
+    refreshToken: string
+}
+
+export type AuthData = IAuthData

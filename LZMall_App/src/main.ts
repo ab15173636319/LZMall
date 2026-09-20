@@ -3,6 +3,7 @@ import App from './App.vue'
 import "@/assets/style/common.css"
 
 import { createPinia } from 'pinia'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 import router from "@/router"
 
@@ -20,6 +21,9 @@ import { fab } from "@fortawesome/free-brands-svg-icons"
 library.add(fas, far, fab)
 
 const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
+
+
 const app = createApp(App)
 
 app.component("font-awesome-icon", FontAwesomeIcon)

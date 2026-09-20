@@ -25,7 +25,10 @@ import { reactive, ref } from 'vue'
 
 import type { FormInstance, FormRules } from 'element-plus'
 import { login } from '@/api/userAuth'
+import { useUser } from '@/store'
+import router from '@/router'
 
+const userAuth = useUser()
 const ruleFormRef = ref<FormInstance>()
 
 const validateUsername = (rule: any, value: any, callback: any) => {
@@ -56,7 +59,11 @@ const submitForm = (formEl: FormInstance | undefined) => {
     formEl.validate(async (valid) => {
         if (valid) {
             const res = await login(formDate)
-            console.log(res);
+            if (res.code === 200) {
+                userAuth.refreshToken = res.data.refreshToken
+                userAuth.accessToken = res.data.accessToken
+                router.push({ name: 'index' })
+            }
         }
     })
 }
