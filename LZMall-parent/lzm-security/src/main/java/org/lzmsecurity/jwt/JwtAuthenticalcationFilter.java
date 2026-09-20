@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -24,6 +25,7 @@ import java.util.Map;
 public class JwtAuthenticalcationFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
+    private final UserDetailsService userDetailsService;
     private final Logger logger = LoggerFactory.getLogger(JwtAuthenticalcationFilter.class);
 
     /**
@@ -42,7 +44,7 @@ public class JwtAuthenticalcationFilter extends OncePerRequestFilter {
         String prefix = jwtUtils.getPrefix() + " ";
         // 携带token，进入验证流程
         if (StringUtils.hasText(token)) {
-            if (token.startsWith(prefix)) {
+            if (!token.startsWith(prefix)) {
                 throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "令牌格式错误");
             }
             token = token.substring(prefix.length());
@@ -58,7 +60,7 @@ public class JwtAuthenticalcationFilter extends OncePerRequestFilter {
             // 如果安全上下文为空，说明未认证，需要认证
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 // 加载用户信息、权限（待完善）
-                UserDetails userDetails = null;
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 // 三参数构造：已认证状态！
                 UsernamePasswordAuthenticationToken upat = new UsernamePasswordAuthenticationToken(username, null, userDetails.getAuthorities());
                 // 存入安全上下文
