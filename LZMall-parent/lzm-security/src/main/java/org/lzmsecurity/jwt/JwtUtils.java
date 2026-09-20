@@ -41,8 +41,7 @@ public class JwtUtils {
         //设置过期时间
         long expSecond = expiration / 1000;
         claims.put("exp", expSecond);
-        String token = JWTUtil.createToken(claims, getSecretKey());
-        return token;
+        return JWTUtil.createToken(claims, getSecretKey());
     }
 
     /**
@@ -79,7 +78,7 @@ public class JwtUtils {
                 logger.warn("令牌验证失败，token={}", token);
                 return null;
             }
-            return (Map<String, Object>) JWTUtil.parseToken(token).getPayload();
+            return JWTUtil.parseToken(token).getPayload().getClaimsJson();
         } catch (Exception e) {
             logger.warn("从令牌中获取载荷失败，token={}", token);
             return null;

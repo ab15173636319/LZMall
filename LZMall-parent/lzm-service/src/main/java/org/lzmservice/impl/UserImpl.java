@@ -61,7 +61,7 @@ public class UserImpl implements UserService {
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("uid", user.getId());
-        claims.put("nickname", user.getNickname());
+        claims.put("username", user.getUsername());
 
         String refreshToken = jwtUtils.generateRefreshToken(claims);
         String accessToken = jwtUtils.generateAccessToken(claims);
