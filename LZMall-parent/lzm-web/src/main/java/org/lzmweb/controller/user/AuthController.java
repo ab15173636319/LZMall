@@ -23,7 +23,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@RequestBody LoginDto loginDto) {
-        return Result.success(userService.login(loginDto));
+        return Result.success("登录成功", userService.login(loginDto));
     }
 
     @PostMapping("/register")
