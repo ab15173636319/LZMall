@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 控制台输出格式 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- 自定义格式：时间 | 级别 | 线程 | 类名 | 消息 -->
+            <pattern>%d{HH:mm:ss.SSS} | %-5level | %thread | %logger{36} | %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 只打印 SQL 和结果，关闭其他 MyBatis 噪音 -->
+    <logger name="org.lzmsecurity.mapper" level="DEBUG"/>  <!-- 按需替换包名 -->
+    <logger name="org.lzmweb.mapper" level="DEBUG"/>
+    <logger name="org.lzmservice.mapper" level="DEBUG"/>
+    <logger name="org.mybatis" level="WARN"/>
+    <logger name="org.apache.ibatis" level="WARN"/>
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

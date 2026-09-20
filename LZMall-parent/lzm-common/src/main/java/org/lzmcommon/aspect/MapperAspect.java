@@ -41,6 +41,7 @@ public class MapperAspect {
             logger.info("方法 {} 执行成功", method.getName());
         } catch (Throwable e) {
             if (e instanceof BusinessException) {
+                logger.warn("方法 {} 执行错误：{}", method.getName(), e.getMessage());
                 throw e;
             }
             logger.error("方法 {} 执行异常：{}", method.getName(), e.getMessage());

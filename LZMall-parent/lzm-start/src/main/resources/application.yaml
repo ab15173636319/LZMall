@@ -35,7 +35,7 @@ mybatis-plus:
     - classpath:mapper/*.xml # 扫描mapper包下的所有mapper文件
     - classpath*:com/**/mapper/*.xml # 扫描com包下的所有mapper文件
   configuration:
-    log-impl: org.lzmcommon.log.PureSqlLog
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
 
 
 

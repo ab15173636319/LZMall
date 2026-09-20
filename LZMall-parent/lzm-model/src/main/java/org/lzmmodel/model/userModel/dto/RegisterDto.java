@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-@Builder
 public class RegisterDto {
 
     @NotNull(message = "用户名不能为空")
