@@ -60,9 +60,7 @@ public class ExceptionHandlerFilter {
     // 处理方法参数验证异常
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Result<String> methodArgumentNotValidException(MethodArgumentNotValidException e) {
-        String message = e.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining(";"));
+        String message = e.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
         return Result.failed(ResultCode.BAD_REQUEST.getCode(), message);
     }
 
