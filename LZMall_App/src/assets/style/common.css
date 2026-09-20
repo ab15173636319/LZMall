@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+    --color-page: #f5f5f5;
+    --color-page-dark: #111;
+    --color-brand: #409eff;
+    --radius-card: 0.75rem;
+}
+
+/* 全屏居中，带背景 */
+@utility page-center-bg {
+    @apply flex h-screen w-screen items-center justify-center bg-page dark:bg-page-dark;
+}
+
+/* 全屏居中，不带背景 */
+@utility page-center {
+    @apply flex h-screen w-screen items-center justify-center;
+}
+
+@utility page-bg {
+    @apply bg-white dark:bg-page-dark;
+}
