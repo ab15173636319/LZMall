@@ -9,4 +9,6 @@ public interface UserService {
     Map<String, Object> login(LoginDto userDto);
 
     void register(RegisterDto registerDto);
+
+    String refreshToken(String refreshToken);
 }

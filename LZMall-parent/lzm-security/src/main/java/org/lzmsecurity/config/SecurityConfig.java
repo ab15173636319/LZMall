@@ -1,11 +1,9 @@
 package org.lzmsecurity.config;
 
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.lzmcommon.result.Result;
-import org.lzmsecurity.jwt.JwtAuthenticalcationFilter;
+import org.lzmcommon.result.ResponseResult;
+import org.lzmsecurity.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -14,8 +12,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import java.io.IOException;
 
 /**
  * Spring Security 安全配置类
@@ -27,7 +23,7 @@ import java.io.IOException;
 public class SecurityConfig {
 
     private final IgnoreUrlsConfig ignoreUrlsConfig;
-    private final JwtAuthenticalcationFilter jwtAuthenticalcationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticalcationFilter;
 
     /**
      * 配置安全过滤链
@@ -59,23 +55,18 @@ public class SecurityConfig {
                         exception
                                 .authenticationEntryPoint(
                                         (request, response, authException) ->
-                                                writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "请先登录")
+                                                ResponseResult.writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "请先登录")
                                 )
                                 // 权限不足处理
                                 .accessDeniedHandler(
                                         (request, response, accessDeniedException) -> {
-                                            writeErrorResponse(response, HttpServletResponse.SC_FORBIDDEN, "权限不足");
+                                            ResponseResult.writeErrorResponse(response, HttpServletResponse.SC_FORBIDDEN, "权限不足");
                                         }
                                 )
                 );
         return http.build();
     }
 
-    private static void writeErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
-        response.setContentType("application/json;charset=utf-8");
-        response.setStatus(status);
-        Result<String> result = Result.failed(message);
-        response.getWriter().write(JSONUtil.toJsonStr(result));
-    }
+
 
 }

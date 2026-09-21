@@ -1,5 +1,6 @@
 package org.lzmservice.impl;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.lzmcommon.exception.BusinessException;
 import org.lzmcommon.result.ResultCode;
@@ -40,6 +41,8 @@ public class UserImpl implements UserService {
 
     private static final String ACCESS_CACHE_KEY = "accessToken:";
 
+    private static final String REFRESH_CACHE_KEY = "refreshToken:";
+
     @Override
     public Map<String, Object> login(LoginDto loginDto) {
 
@@ -67,7 +70,7 @@ public class UserImpl implements UserService {
         String accessToken = jwtUtils.generateAccessToken(claims);
 
         redisUtils.set(ACCESS_CACHE_KEY + user.getId(), accessToken, jwtUtils.getAccessExpiration(), TimeUnit.MILLISECONDS);
-
+        redisUtils.set(REFRESH_CACHE_KEY + user.getId(), refreshToken, jwtUtils.getRefreshExpiration(), TimeUnit.MILLISECONDS);
 
         Map<String, Object> result = new HashMap<>();
         result.put("accessToken", accessToken);
@@ -108,6 +111,18 @@ public class UserImpl implements UserService {
         }
     }
 
+    // 通过刷新token获取新的访问token
+    @Override
+    public String refreshToken(String refreshToken) {
+
+        if (jwtUtils.isTokenExpired(refreshToken)) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "登录过期");
+        }
+
+        return jwtUtils.refreshAccessToken(refreshToken);
+    }
+
+
     private Optional<User> getUser(String username) {
         try {
             return userMapper.selectByUsername(username);
@@ -116,7 +131,6 @@ public class UserImpl implements UserService {
             throw new BusinessException(ResultCode.INTERNAL_SERVER_ERROR.getCode(), "系统异常");
         }
     }
-
 
 
 }

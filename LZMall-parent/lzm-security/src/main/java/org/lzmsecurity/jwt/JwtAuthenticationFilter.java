@@ -5,8 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.lzmcommon.exception.BusinessException;
-import org.lzmcommon.result.ResultCode;
+import org.lzmcommon.result.ResponseResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
@@ -22,11 +21,11 @@ import java.util.Map;
 
 @Configuration
 @RequiredArgsConstructor
-public class JwtAuthenticalcationFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
-    private final Logger logger = LoggerFactory.getLogger(JwtAuthenticalcationFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     /**
      * 认证过滤器
@@ -45,17 +44,20 @@ public class JwtAuthenticalcationFilter extends OncePerRequestFilter {
         // 携带token，进入验证流程
         if (StringUtils.hasText(token)) {
             if (!token.startsWith(prefix)) {
-                throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "令牌格式错误");
+                ResponseResult.writeErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "令牌格式错误");
+                return;
             }
             token = token.substring(prefix.length());
             Map<String, Object> claims = jwtUtils.getTokenClaims(token);
             if (claims == null) {
-                throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "未登录或登录过期");
+                ResponseResult.writeErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "未登录或登录过期");
+                return;
             }
             String username = (String) claims.get("username");
 
             if (!StringUtils.hasText(username)) {
-                throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "令牌载荷无效");
+                ResponseResult.writeErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "令牌载荷无效");
+                return;
             }
             // 如果安全上下文为空，说明未认证，需要认证
             if (SecurityContextHolder.getContext().getAuthentication() == null) {

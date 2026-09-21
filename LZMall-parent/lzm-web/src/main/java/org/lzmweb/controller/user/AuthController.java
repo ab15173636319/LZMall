@@ -1,5 +1,7 @@
 package org.lzmweb.controller.user;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.lzmcommon.result.Result;
@@ -30,5 +32,18 @@ public class AuthController {
     public Result<String> register(@Valid @RequestBody RegisterDto registerDto) {
         userService.register(registerDto);
         return Result.success("注册成功");
+    }
+
+    @PostMapping("/refreshAccess")
+    public Result<String> refreshToken(HttpServletRequest request) {
+
+        Cookie[] cookies = request.getCookies();
+        for (Cookie cookie : cookies) {
+            if (cookie.getName().equals("refreshToken")) {
+                String refreshToken = cookie.getValue();
+                return Result.success("刷新成功", userService.refreshToken(refreshToken));
+            }
+        }
+        return Result.failed("刷新失败");
     }
 }
