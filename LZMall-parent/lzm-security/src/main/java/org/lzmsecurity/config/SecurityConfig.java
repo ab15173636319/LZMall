@@ -61,6 +61,7 @@ public class SecurityConfig {
                                         (request, response, authException) ->
                                                 writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "请先登录")
                                 )
+                                // 权限不足处理
                                 .accessDeniedHandler(
                                         (request, response, accessDeniedException) -> {
                                             writeErrorResponse(response, HttpServletResponse.SC_FORBIDDEN, "权限不足");

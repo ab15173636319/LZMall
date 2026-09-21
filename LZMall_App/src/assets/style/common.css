@@ -16,6 +16,10 @@
 @utility page-center {
     @apply flex h-screen w-screen items-center justify-center;
 }
+/* 全屏居中*/
+@utility page-full {
+    @apply h-screen w-screen;
+}
 
 @utility page-bg {
     @apply bg-white dark:bg-page-dark;

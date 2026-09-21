@@ -59,11 +59,11 @@ public class JwtAuthenticalcationFilter extends OncePerRequestFilter {
             }
             // 如果安全上下文为空，说明未认证，需要认证
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                // 加载用户信息、权限（待完善）
+                // 查询出用户对象
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                // 三参数构造：已认证状态！
-                UsernamePasswordAuthenticationToken upat = new UsernamePasswordAuthenticationToken(username, null, userDetails.getAuthorities());
-                // 存入安全上下文
+                // 手动组装一个认证对象
+                UsernamePasswordAuthenticationToken upat = new UsernamePasswordAuthenticationToken(username, userDetails.getPassword(), userDetails.getAuthorities());
+                // 将认证对象放到上下文中
                 SecurityContextHolder.getContext().setAuthentication(upat);
                 logger.info("用户【{}】认证成功", username);
             }

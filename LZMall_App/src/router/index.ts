@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from "vue-router"
 import { authRouter } from "./modules/authRouter"
 import { useUser } from "@/store"
 import ICONS from "@/enum/icons"
-
 const router = createRouter({
     history: createWebHistory(),
     routes: [
@@ -18,6 +17,15 @@ const router = createRouter({
         },
         ...authRouter,
         {
+            path: '/net-error',
+            meta: {
+                title: "网络异常",
+                auth: false,
+                icon: ICONS.ERROR
+            },
+            component: () => import("@/views/error/NetworkError.vue")
+        },
+        {
             path: '/:pathMatch(.*)*',
             meta: {
                 title: "404 - 页面不存在",
@@ -25,11 +33,11 @@ const router = createRouter({
                 icon: ICONS.ERROR
             },
             component: () => import("@/views/error/NotFound.vue")
-        }
+        },
     ]
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
     const userStore = useUser()
     // 设置标题
     document.title = to.meta.title || "LZMall"

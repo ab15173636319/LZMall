@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CheckController {
     @GetMapping("/checkLink")
     public Result<String> test() {
-        return Result.success("连接成功！");
+        return Result.success("服务连接成功", "连接成功！");
     }
 
 }

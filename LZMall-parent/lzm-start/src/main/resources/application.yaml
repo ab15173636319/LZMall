@@ -61,4 +61,4 @@ security:
       - /*/*.js
       - /*/*.png
       - /favicon.ico
-      - /test/**
+      - /test/checkLink
