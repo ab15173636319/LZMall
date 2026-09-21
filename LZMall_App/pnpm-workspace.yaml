@@ -1,2 +1,9 @@
+# pnpm v11+ 供应链安全策略：依赖的安装期脚本（preinstall/install/postinstall）
+# 必须在这里显式表态，未表态的会以 ERR_PNPM_IGNORED_BUILDS 中断安装。
+# key = 包名（与 lockfile 一致），value = true 允许执行 / false 显式拒绝。
 allowBuilds:
-  '@parcel/watcher': set this to true or false
+  # @parcel/watcher 只是 sass 的可选依赖，仅供 `sass --watch` 这个 CLI 的文件监听使用；
+  # 本项目 SCSS 由 Vite 走 sass 的编程式 API 编译，不依赖它。
+  # 且 Windows x64 下已有预编译二进制（@parcel/watcher-win32-x64），
+  # 其 install 脚本（node scripts/build-from-source.js）无实际作用，故显式拒绝。
+  '@parcel/watcher': false
