@@ -79,7 +79,6 @@ const submitForm = (formEl: FormInstance | undefined) => {
         if (valid) {
             const res = await login(formDate)
             if (res.code === 200) {
-                userAuth.refreshToken = res.data.refreshToken
                 userAuth.accessToken = res.data.accessToken
                 router.push({ name: 'index' })
             }

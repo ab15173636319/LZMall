@@ -1,19 +1,15 @@
 package org.lzmcommon.aspect;
 
-import cn.hutool.json.ObjectMapper;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.lzmcommon.exception.BusinessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 
 @Aspect
 @Component
@@ -28,23 +24,23 @@ public class MapperAspect {
     }
 
     @Around("mapperImplLogger()")
-    public Object objectMapper(ProceedingJoinPoint pjp) throws Throwable {
-        // 获取当前方法签名
+    public Object logAround(ProceedingJoinPoint pjp) throws Throwable {
         Signature signature = pjp.getSignature();
-        // 转换为方法签名
-        MethodSignature ms = (MethodSignature) signature;
-        // 获取当前方法
-        Method method = ms.getMethod();
+        String methodName = signature.getDeclaringTypeName() + "." + signature.getName();
+        long startTime = System.currentTimeMillis();
         Object result = null;
         try {
             result = pjp.proceed();
-            logger.info("方法 {} 执行成功", method.getName());
+            long cost = System.currentTimeMillis() - startTime;
+            logger.info("方法 {} 执行成功，耗时 {} ms", methodName, cost);
         } catch (Throwable e) {
+            long cost = System.currentTimeMillis() - startTime;
             if (e instanceof BusinessException) {
-                logger.warn("方法 {} 执行错误：{}", method.getName(), e.getMessage());
-                throw e;
+                logger.warn("方法 {} 执行业务错误，耗时 {} ms：{}", methodName, cost, e.getMessage());
+            } else {
+                logger.error("方法 {} 执行异常，耗时 {} ms", methodName, cost, e);
             }
-            logger.error("方法 {} 执行异常：{}", method.getName(), e.getMessage());
+            throw e;
         }
         return result;
     }

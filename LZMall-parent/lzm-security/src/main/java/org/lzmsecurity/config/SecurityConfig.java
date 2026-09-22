@@ -3,6 +3,7 @@ package org.lzmsecurity.config;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.lzmcommon.result.ResponseResult;
+import org.lzmcommon.result.ResultCode;
 import org.lzmsecurity.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,6 +43,8 @@ public class SecurityConfig {
                                 auth.requestMatchers(url).permitAll();
                             }
                             auth.requestMatchers(HttpMethod.OPTIONS).permitAll(); // 允许 OPTIONS 请求
+                            auth.requestMatchers("/admin/**").hasRole("ADMIN");
+                            auth.anyRequest().authenticated();
                         }
                 )
                 // 禁用默认登录页面
@@ -55,18 +58,19 @@ public class SecurityConfig {
                         exception
                                 .authenticationEntryPoint(
                                         (request, response, authException) ->
-                                                ResponseResult.writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "请先登录")
+                                                ResponseResult.writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                                                        ResultCode.T_ACCOUNT_NOT_LOGIN.getCode(), "请先登录")
                                 )
                                 // 权限不足处理
                                 .accessDeniedHandler(
                                         (request, response, accessDeniedException) -> {
-                                            ResponseResult.writeErrorResponse(response, HttpServletResponse.SC_FORBIDDEN, "权限不足");
+                                            ResponseResult.writeErrorResponse(response, HttpServletResponse.SC_FORBIDDEN,
+                                                    ResultCode.R_FORBIDDEN.getCode(), "权限不足");
                                         }
                                 )
                 );
         return http.build();
     }
-
 
 
 }

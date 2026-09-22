@@ -13,8 +13,8 @@ public class Result<T> implements Serializable {
     private String message;
     private T data;
 
-    public static <T> Result<T> success(T data) {
-        return new Result<T>(ResultCode.SUCCESS.getCode(), ResultCode.SUCCESS.getMessage(), data);
+    public static <T> Result<T> success(String message) {
+        return new Result<T>(ResultCode.SUCCESS.getCode(), message, null);
     }
 
     public static <T> Result<T> success(String message, T data) {
@@ -22,11 +22,11 @@ public class Result<T> implements Serializable {
     }
 
     public static <T> Result<T> systemError(String message) {
-        return new Result<T>(ResultCode.SERVICE_UNAVAILABLE.getCode(), message, null);
+        return new Result<T>(ResultCode.R_SERVICE_UNAVAILABLE.getCode(), message, null);
     }
 
     public static <T> Result<T> failed(String message) {
-        return new Result<T>(ResultCode.FAILED.getCode(), message, null);
+        return new Result<T>(ResultCode.R_INTERNAL_SERVER_ERROR.getCode(), message, null);
     }
 
     public static <T> Result<T> failed(int code, String message) {

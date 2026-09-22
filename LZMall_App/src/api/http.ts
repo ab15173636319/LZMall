@@ -2,12 +2,11 @@ import type { Response } from "@/types/http";
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { ElMessage } from "element-plus";
 import { useUser } from "@/store";
+import { RESULT_CODE } from "@/enum/resultCode";
 import router from "@/router";
 
 const http = axios.create({
-    // 环境变量在构建时被静态替换，名字必须与 .env 中完全一致（见 src/types/env.d.ts）
     baseURL: import.meta.env.VITE_API_BASE_URL,
-    // .env 里的值都是字符串，超时需要转成 number
     timeout: Number(import.meta.env.VITE_API_TIMEOUT),
     headers: {
         "Content-Type": "application/json",
@@ -18,8 +17,6 @@ const http = axios.create({
 http.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
         const user = useUser()
-        // 只把 accessToken 放进 Authorization 头；
-        // refreshToken 是长期凭证，绝不能随业务请求发给后端，只在「刷新接口」里单独提交。
         if (user.accessToken) {
             config.headers["Authorization"] = "Bearer " + user.accessToken
         }
@@ -48,11 +45,14 @@ http.interceptors.response.use(
             case 401: {
                 // 登录失效：清除本地用户信息并跳转登录页
                 // 注意：这里是 axios 回调，不在 setup() 里，不能用 useRouter()（会返回 undefined）
+                const code = err.response?.data?.code;
                 const user = useUser();
                 user.userInfo = null;
                 user.accessToken = '';
-                user.refreshToken = '';
                 router.push("/auth");
+                if (code === RESULT_CODE.ACCOUNT_ON_OTHER_DEVICE) {
+                    return ElMessage.error("账号已在其它设备登录，请重新登录");
+                }
                 return ElMessage.error(message || "登录已失效，请重新登录");
             }
             case 403:

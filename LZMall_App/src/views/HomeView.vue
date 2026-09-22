@@ -39,4 +39,18 @@
     </div>
 </template>
 
-<script setup></script>
+<script setup>
+
+
+
+import { useUser } from '@/store';
+import { onMounted } from 'vue';
+const user = useUser()
+
+onMounted(async () => {
+    await user.getUserInfo()
+})
+
+
+
+</script>

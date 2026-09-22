@@ -24,44 +24,44 @@ public class ExceptionHandlerFilter {
     // 处理运行时异常
     @ExceptionHandler(Exception.class)
     public Result<String> exception(Exception e) {
-        return Result.failed(ResultCode.INTERNAL_SERVER_ERROR.getCode(), e.getMessage());
+        return Result.failed(ResultCode.R_INTERNAL_SERVER_ERROR.getCode(), ResultCode.R_INTERNAL_SERVER_ERROR.getMessage());
     }
 
     // 处理空指针异常
     @ExceptionHandler(NullPointerException.class)
     public Result<String> nullPointerException(NullPointerException e) {
-        return Result.failed(ResultCode.BAD_REQUEST.getCode(), "参数不能为空");
+        return Result.failed(ResultCode.R_BAD_REQUEST.getCode(), "参数不能为空");
     }
 
     // 处理非法参数异常
     @ExceptionHandler(IllegalArgumentException.class)
     public Result<String> illegalArgumentException(IllegalArgumentException e) {
-        return Result.failed(ResultCode.BAD_REQUEST.getCode(), "参数错误");
+        return Result.failed(ResultCode.R_BAD_REQUEST.getCode(), "参数错误");
     }
 
     // 处理数字格式异常
     @ExceptionHandler(NumberFormatException.class)
     public Result<String> numberFormatException(NumberFormatException e) {
-        return Result.failed(ResultCode.BAD_REQUEST.getCode(), "参数格式错误");
+        return Result.failed(ResultCode.R_BAD_REQUEST.getCode(), "参数格式错误");
     }
 
     // 处理非法状态异常
     @ExceptionHandler(IllegalStateException.class)
     public Result<String> illegalStateException(IllegalStateException e) {
-        return Result.failed(ResultCode.BAD_REQUEST.getCode(), "状态错误");
+        return Result.failed(ResultCode.R_BAD_REQUEST.getCode(), "状态错误");
     }
 
     // 处理请求方式异常
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public Result<String> httpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
-        return Result.failed(ResultCode.BAD_REQUEST.getCode(), "请求方式错误");
+        return Result.failed(ResultCode.R_BAD_REQUEST.getCode(), "请求方式错误");
     }
 
     // 处理方法参数验证异常
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Result<String> methodArgumentNotValidException(MethodArgumentNotValidException e) {
         String message = e.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
-        return Result.failed(ResultCode.BAD_REQUEST.getCode(), message);
+        return Result.failed(ResultCode.R_BAD_REQUEST.getCode(), message);
     }
 
 

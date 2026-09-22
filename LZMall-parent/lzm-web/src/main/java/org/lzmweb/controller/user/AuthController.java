@@ -2,18 +2,19 @@ package org.lzmweb.controller.user;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.lzmcommon.exception.BusinessException;
 import org.lzmcommon.result.Result;
+import org.lzmcommon.result.ResultCode;
 import org.lzmmodel.model.userModel.dto.LoginDto;
 import org.lzmmodel.model.userModel.dto.RegisterDto;
-import org.lzmservice.impl.UserImpl;
+import org.lzmmodel.model.userModel.vo.UserVo;
 import org.lzmservice.service.UserService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Map;
 
 @RestController
@@ -24,8 +25,8 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/login")
-    public Result<Map<String, Object>> login(@RequestBody LoginDto loginDto) {
-        return Result.success("登录成功", userService.login(loginDto));
+    public Result<Map<String, Object>> login(@RequestBody LoginDto loginDto, HttpServletResponse response) {
+        return Result.success("登录成功", userService.login(loginDto, response));
     }
 
     @PostMapping("/register")
@@ -36,8 +37,10 @@ public class AuthController {
 
     @PostMapping("/refreshAccess")
     public Result<String> refreshToken(HttpServletRequest request) {
-
         Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return Result.failed("刷新失败");
+        }
         for (Cookie cookie : cookies) {
             if (cookie.getName().equals("refreshToken")) {
                 String refreshToken = cookie.getValue();
@@ -45,5 +48,15 @@ public class AuthController {
             }
         }
         return Result.failed("刷新失败");
+    }
+
+    @GetMapping("/info")
+    public Result<UserVo> getUserInfo(Principal principal) {
+        if (principal == null) {
+            throw new BusinessException(ResultCode.T_ACCOUNT_NOT_LOGIN.getCode(), ResultCode.T_ACCOUNT_NOT_LOGIN.getMessage());
+        }
+        String username = principal.getName();
+        UserVo userVo = userService.getUserInfo(username);
+        return Result.success("获取用户信息成功", userVo);
     }
 }

@@ -30,6 +30,10 @@ public class JwtUtils {
     private String header;
     @Value("${jwt.prefix}")
     private String prefix;
+    // 刷新令牌缓存键前缀
+    private final String REFRESH_CACHE_KEY = "refreshToken:";
+    // 暗黑刷新令牌缓存键前缀
+    private final String DARK_REFRESH_CACHE_KEY = "darkRefreshToken:";
 
     // 获取 JWT 密钥
     private byte[] getSecretKey() {
@@ -37,10 +41,11 @@ public class JwtUtils {
     }
 
     // 生成 JWT 令牌
-    private String generateToken(Map<String, Object> claims, Long expiration) {
+    private String generateToken(Map<String, Object> claims, Long expiration, String subject) {
         //设置过期时间
         long expSecond = expiration / 1000;
         claims.put("exp", expSecond);
+        claims.put("sub", subject);
         return JWTUtil.createToken(claims, getSecretKey());
     }
 
@@ -52,7 +57,7 @@ public class JwtUtils {
      */
     public String generateRefreshToken(Map<String, Object> claims) {
         long expiration = System.currentTimeMillis() + refreshExpiration;
-        return generateToken(claims, expiration);
+        return generateToken(claims, expiration, "refresh");
     }
 
     /**
@@ -63,7 +68,7 @@ public class JwtUtils {
      */
     public String generateAccessToken(Map<String, Object> claims) {
         long expiration = System.currentTimeMillis() + accessExpiration;
-        return generateToken(claims, expiration);
+        return generateToken(claims, expiration, "access");
     }
 
     /**
@@ -133,58 +138,35 @@ public class JwtUtils {
      */
     public String refreshAccessToken(String refreshToken) {
         if (!StringUtils.hasText(refreshToken)) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "刷新令牌不能为空");
+            throw new BusinessException(ResultCode.T_TOKEN_IS_EMPTY.getCode(), "刷新令牌不能为空");
         }
         // 校验refreshToken是否有效（签名+未过期）
         if (isTokenExpired(refreshToken)) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "刷新令牌已失效，请重新登录");
+            throw new BusinessException(ResultCode.T_TOKEN_EXPIRED.getCode(), "刷新令牌已失效，请重新登录");
         }
         Map<String, Object> claims = getTokenClaims(refreshToken);
         if (claims == null) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "刷新令牌解析失败");
+            throw new BusinessException(ResultCode.T_TOKEN_PARSE_FAILED.getCode(), "刷新令牌解析失败");
         }
         // 生成新accessToken
         return generateAccessToken(claims);
     }
 
     /**
-     * 刷新刷新令牌
+     * 获取token的剩余时间
      *
-     * @param refreshToken 刷新令牌
-     * @return 刷新后的刷新令牌
+     * @param token JWT 令牌
+     * @return 剩余时间，毫秒级
      */
 
-    public String refreshRefreshToken(String refreshToken) {
-        Date refreshExpired = getTokenExpired(refreshToken);
-        Map<String, Object> claims = getTokenClaims(refreshToken);
-        if (Objects.isNull(refreshExpired) || Objects.isNull(claims)) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "刷新令牌验证失败");
+    public long getTokenRemainingTime(String token) {
+        Date expired = getTokenExpired(token);
+        System.out.println("========================expired " + expired.getTime());
+        System.out.println("========================currentTime " + System.currentTimeMillis() / 1000);
+        if (expired == null) {
+            return 0;
         }
-        Date currentTime = new Date();
-        // 当剩余时间不足20%时返回新refreshToken
-        long remainingTime = refreshExpired.getTime() - currentTime.getTime();
-        if (remainingTime > refreshExpiration * 0.2) {
-            return refreshToken;
-        }
-        // 生成新refreshToken
-        return generateRefreshToken(claims);
-    }
-
-    /**
-     * 判断是否异地登录
-     * 判断保存到http的accessToken和缓存中的accessToken是否相等
-     *
-     * @param httpToken  从请求头中获取的令牌
-     * @param cacheToken 从缓存中获取的令牌
-     * @return 是否异地登录
-     */
-
-    public boolean isRemoteLogin(String httpToken, String cacheToken) {
-        if (!StringUtils.hasText(httpToken) || !StringUtils.hasText(cacheToken)) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "未登录或登录过期");
-        }
-
-        return !Objects.equals(httpToken, cacheToken);
+        return expired.getTime() - System.currentTimeMillis()/1000;
     }
 
 
