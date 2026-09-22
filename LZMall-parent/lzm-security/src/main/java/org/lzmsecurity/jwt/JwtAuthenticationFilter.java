@@ -67,9 +67,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Object uid = accessClaims.get("uid");
             String jti = (String) accessClaims.get("jti");
 
+            // 检查access token是否有效
             if (!StringUtils.hasText(username) || uid == null || !StringUtils.hasText(jti)) {
-                ResponseResult.writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
-                        ResultCode.T_ACCOUNT_NOT_LOGIN.getCode(), ResultCode.T_ACCOUNT_NOT_LOGIN.getMessage());
+                ResponseResult.writeErrorResponse(
+                        response,
+                        HttpServletResponse.SC_UNAUTHORIZED,
+                        ResultCode.T_ACCOUNT_NOT_LOGIN.getCode(),
+                        ResultCode.T_ACCOUNT_NOT_LOGIN.getMessage()
+                );
+                return;
+            }
+
+            // 检查access token是否过期
+            long remainingTime = jwtUtils.getTokenRemainingTime(token);
+            if (remainingTime <= 0) {
+                ResponseResult.writeErrorResponse(
+                        response,
+                        HttpServletResponse.SC_UNAUTHORIZED,
+                        ResultCode.T_TOKEN_EXPIRED.getCode(),
+                        ResultCode.T_TOKEN_EXPIRED.getMessage()
+                );
                 return;
             }
 
@@ -83,6 +100,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             Map<String, Object> refreshClaims = jwtUtils.getTokenClaims(refreshToken);
+            // 检查refresh token是否有效
             if (refreshClaims == null) {
                 ResponseResult.writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
                         ResultCode.T_TOKEN_EXPIRED.getCode(), ResultCode.T_TOKEN_EXPIRED.getMessage());
@@ -90,6 +108,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             String refreshJti = (String) refreshClaims.get("jti");
+            // 检查refresh token是否与access token匹配
             if (!jti.equals(refreshJti)) {
                 ResponseResult.writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
                         ResultCode.T_ACCOUNT_ON_OTHER_DEVICE.getCode(), ResultCode.T_ACCOUNT_ON_OTHER_DEVICE.getMessage());

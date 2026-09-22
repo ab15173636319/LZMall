@@ -12,3 +12,7 @@ export const register = async (registerDto: RegisterDto): Promise<Response<null>
 export const getInfo = async (): Promise<Response<UserInfo>> => {
     return await get("/user/info", {})
 }
+
+export const refreshAccess = async (): Promise<Response<String>> => {
+    return await post("/user/refresh", {})
+}
