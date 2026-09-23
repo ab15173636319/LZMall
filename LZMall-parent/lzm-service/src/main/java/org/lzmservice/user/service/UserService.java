@@ -1,4 +1,4 @@
-package org.lzmservice.service;
+package org.lzmservice.user.service;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.lzmmodel.model.userModel.dto.LoginDto;

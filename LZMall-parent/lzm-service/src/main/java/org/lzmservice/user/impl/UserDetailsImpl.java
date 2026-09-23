@@ -1,7 +1,7 @@
-package org.lzmservice.impl;
+package org.lzmservice.user.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.lzmservice.mapper.UserMapper;
+import org.lzmservice.user.mapper.UserMapper;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
