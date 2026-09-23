@@ -24,7 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final IgnoreUrlsConfig ignoreUrlsConfig;
-    private final JwtAuthenticationFilter jwtAuthenticalcationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     /**
      * 配置安全过滤链
@@ -53,7 +53,7 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 // 禁用 CSRF 防护
                 .csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(jwtAuthenticalcationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exception ->
                         exception
                                 .authenticationEntryPoint(

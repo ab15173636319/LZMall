@@ -1,6 +1,7 @@
 package org.lzmmodel.model.userModel.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,6 +18,10 @@ import java.util.List;
 @TableName("user")
 @AllArgsConstructor
 @NoArgsConstructor
+// 这些是 UserDetails 接口的派生只读属性：序列化时无需写出，反序列化时也无对应 setter。
+// 若不忽略，getAuthorities() 返回的 List.of() 会被 JSON 序列化器当成不可变集合类型写入，
+// 反序列化时无法还原（ImmutableCollections 无法构造）。
+@JsonIgnoreProperties({"authorities", "accountNonExpired", "accountNonLocked", "credentialsNonExpired", "enabled"})
 public class User extends BaseEntity implements UserDetails {
 
     private String username;

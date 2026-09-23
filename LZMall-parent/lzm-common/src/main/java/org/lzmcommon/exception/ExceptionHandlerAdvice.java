@@ -3,17 +3,14 @@ package org.lzmcommon.exception;
 import org.lzmcommon.result.Result;
 import org.lzmcommon.result.ResultCode;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.stream.Collectors;
-
 @Configuration
 @RestControllerAdvice
-public class ExceptionHandlerFilter {
+public class ExceptionHandlerAdvice {
 
     // 处理自定义异常
     @ExceptionHandler(BusinessException.class)

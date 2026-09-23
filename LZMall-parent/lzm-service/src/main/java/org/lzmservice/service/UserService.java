@@ -12,7 +12,7 @@ public interface UserService {
 
     void register(RegisterDto registerDto);
 
-    String refreshToken(String refreshToken);
+    String refreshToken(String refreshToken, HttpServletResponse response);
 
     UserVo getUserInfo(String username);
 }

@@ -6,12 +6,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.lzmcommon.exception.BusinessException;
+import org.lzmcommon.http.CookieSet;
 import org.lzmcommon.result.Result;
 import org.lzmcommon.result.ResultCode;
 import org.lzmmodel.model.userModel.dto.LoginDto;
 import org.lzmmodel.model.userModel.dto.RegisterDto;
 import org.lzmmodel.model.userModel.vo.UserVo;
 import org.lzmservice.service.UserService;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -23,6 +25,7 @@ import java.util.Map;
 public class AuthController {
 
     private final UserService userService;
+    private final CookieSet cookieSet;
 
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@RequestBody LoginDto loginDto, HttpServletResponse response) {
@@ -36,16 +39,10 @@ public class AuthController {
     }
 
     @PostMapping("/refreshAccess")
-    public Result<String> refreshToken(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            return Result.failed("刷新失败");
-        }
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals("refreshToken")) {
-                String refreshToken = cookie.getValue();
-                return Result.success("刷新成功", userService.refreshToken(refreshToken));
-            }
+    public Result<String> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+        String refresh = cookieSet.getCookie(request, "refreshToken");
+        if (StringUtils.hasText(refresh)) {
+            return Result.success("刷新成功", userService.refreshToken(refresh, response));
         }
         return Result.failed("刷新失败");
     }

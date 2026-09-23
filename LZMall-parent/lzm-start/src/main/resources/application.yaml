@@ -62,3 +62,7 @@ security:
       - /*/*.png
       - /favicon.ico
       - /test/checkLink
+
+redis:
+  cache-key:
+    save-user-info: "current_user_info:"

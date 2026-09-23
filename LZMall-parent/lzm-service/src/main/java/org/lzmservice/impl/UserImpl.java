@@ -1,10 +1,10 @@
 package org.lzmservice.impl;
 
-import cn.hutool.core.lang.UUID;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.lzmcommon.exception.BusinessException;
+import org.lzmcommon.http.CookieSet;
 import org.lzmcommon.result.ResultCode;
 import org.lzmcommon.utils.RedisUtils;
 import org.lzmmodel.model.userModel.vo.UserVo;
@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -39,8 +40,8 @@ public class UserImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     private final JwtUtils jwtUtils;
-
     private final RedisUtils redisUtils;
+    private final CookieSet cookieSet;
 
 
     @Override
@@ -68,40 +69,24 @@ public class UserImpl implements UserService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("uid", user.getId());
         claims.put("username", user.getUsername());
-        //
-        // lockKey用于防止重复登录
-        // lockKey存入内存
-        String ssid = UUID.randomUUID().toString().replace("-", "");
-        claims.put("jti", ssid);
-        String refreshToken;
-        String accessToken;
-        try {
-            refreshToken = jwtUtils.generateRefreshToken(claims);
-            accessToken = jwtUtils.generateAccessToken(claims);
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new BusinessException(ResultCode.R_INTERNAL_SERVER_ERROR.getCode(), "token生成失败");
-        }
+        claims.put("jti", jwtUtils.generateJti());
+        String refreshToken = jwtUtils.generateRefreshToken(claims);
+        String accessToken = jwtUtils.generateAccessToken(claims);
+
 
         // 判断是否已经登录
+        // 如果已经登录，则将旧的refreshToken存入黑名单，并设置过期时间为剩余时间
         String cacheKey = jwtUtils.getREFRESH_CACHE_KEY() + user.getId();
         if (redisUtils.hasKey(cacheKey)) {
             String oldRefreshToken = (String) redisUtils.get(cacheKey);
             long remainingTime = jwtUtils.getTokenRemainingTime(oldRefreshToken);
-            log.info("oldRefreshToken {} 还期时间 {} ms", oldRefreshToken, remainingTime);
-            redisUtils.set(jwtUtils.getDARK_REFRESH_CACHE_KEY() + user.getId(), oldRefreshToken, remainingTime, TimeUnit.MILLISECONDS);
+            String jti = jwtUtils.getJti(oldRefreshToken);
+            redisUtils.set(jwtUtils.getDARK_REFRESH_CACHE_KEY() + user.getId() + jti, oldRefreshToken, remainingTime, TimeUnit.MILLISECONDS);
         }
 
         redisUtils.set(cacheKey, refreshToken, jwtUtils.getRefreshExpiration(), TimeUnit.MILLISECONDS);
-
-        Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(false); // 只有https才需要设置为true，否则会报错，本地开发环境不需要设置为true
-        refreshTokenCookie.setPath("/"); // 必须加上path！你之前漏掉了
-        refreshTokenCookie.setMaxAge((int) (jwtUtils.getRefreshExpiration() / 1000));
-
-        response.addCookie(refreshTokenCookie);
+        // 设置cookie
+        CookieSet.setCookie(response, "refreshToken", refreshToken, (int) (jwtUtils.getRefreshExpiration() / 1000));
 
 
         Map<String, Object> result = new HashMap<>();
@@ -143,7 +128,7 @@ public class UserImpl implements UserService {
 
     // 通过刷新token获取新的访问token
     @Override
-    public String refreshToken(String refreshToken) {
+    public String refreshToken(String refreshToken, HttpServletResponse response) {
         // 校验refreshToken是否有效（签名+未过期）
         if (jwtUtils.isTokenExpired(refreshToken)) {
             throw new BusinessException(ResultCode.R_BAD_REQUEST.getCode(), "登录过期");
@@ -151,15 +136,31 @@ public class UserImpl implements UserService {
 
         // 校验refreshToken是否匹配内存中的refreshToken
         Map<String, Object> claims = jwtUtils.getTokenClaims(refreshToken);
-        String uid = (String) claims.get("uid");
+        Object uid = jwtUtils.getUid(refreshToken);
+
+
+        // 查看当前token是否在黑名单中
         String jti = (String) claims.get("jti");
-        String cacheKey = jwtUtils.getREFRESH_CACHE_KEY() + uid;
-        String oldRefreshToken = (String) redisUtils.get(cacheKey);
-        if (!oldRefreshToken.equals(refreshToken)) {
-            throw new BusinessException(ResultCode.T_ACCOUNT_ON_OTHER_DEVICE.getCode(), ResultCode.T_ACCOUNT_ON_OTHER_DEVICE.getMessage());
+        String darkCacheKey = jwtUtils.getBlackKey(jti, uid);
+        String darkRefreshToken = (String) redisUtils.get(darkCacheKey);
+        // 如果在黑名单中，则返回登录过期
+        if (StringUtils.hasText(darkRefreshToken) && darkRefreshToken.equals(refreshToken)) {
+            throw new BusinessException(
+                    ResultCode.T_ACCOUNT_ON_OTHER_DEVICE.getCode(),
+                    ResultCode.T_ACCOUNT_ON_OTHER_DEVICE.getMessage()
+            );
         }
 
-        return jwtUtils.refreshAccessToken(refreshToken);
+        // 更新jti
+        claims.put("jti", jwtUtils.generateJti());
+        // 更新refreshToken
+        String newRefreshToken = jwtUtils.generateRefreshToken(claims);
+        String refreshCacheKey = jwtUtils.getCacheToken(uid);
+        redisUtils.set(refreshCacheKey, newRefreshToken, jwtUtils.getRefreshExpiration(), TimeUnit.MILLISECONDS);
+        // 更新cookie
+        CookieSet.setCookie(response, "refreshToken", newRefreshToken, (int) (jwtUtils.getRefreshExpiration() / 1000));
+
+        return jwtUtils.generateAccessToken(claims);
     }
 
     @Override

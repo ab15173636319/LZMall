@@ -11,10 +11,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 @Component
 @Getter
@@ -31,7 +33,7 @@ public class JwtUtils {
     @Value("${jwt.prefix}")
     private String prefix;
     // 刷新令牌缓存键前缀
-    private final String REFRESH_CACHE_KEY = "refreshToken:";
+    private final String REFRESH_CACHE_KEY = "refreshToken--:";
     // 暗黑刷新令牌缓存键前缀
     private final String DARK_REFRESH_CACHE_KEY = "darkRefreshToken:";
 
@@ -81,12 +83,12 @@ public class JwtUtils {
         try {
             if (!JWTUtil.verify(token, getSecretKey())) {
                 logger.warn("令牌验证失败，token={}", token);
-                return null;
+                throw new BusinessException(ResultCode.T_TOKEN_PARSE_FAILED.getCode(), "令牌验证失败");
             }
             return JWTUtil.parseToken(token).getPayload().getClaimsJson();
         } catch (Exception e) {
             logger.warn("从令牌中获取载荷失败，token={}", token);
-            return null;
+            throw new BusinessException(ResultCode.T_TOKEN_PARSE_FAILED.getCode(), "令牌验证失败");
         }
     }
 
@@ -103,8 +105,8 @@ public class JwtUtils {
             if (claims == null) {
                 return true;
             }
-            long expiration = (Long) claims.get("exp") * 1000L;
-            long currentTime = System.currentTimeMillis();
+            long expiration = ((Number) claims.get("exp")).longValue();
+            long currentTime = System.currentTimeMillis() / 1000;
             // 令牌过期，返回true
             return currentTime > expiration;
         } catch (Exception e) {
@@ -161,13 +163,115 @@ public class JwtUtils {
 
     public long getTokenRemainingTime(String token) {
         Date expired = getTokenExpired(token);
-        System.out.println("========================expired " + expired.getTime());
-        System.out.println("========================currentTime " + System.currentTimeMillis() / 1000);
         if (expired == null) {
             return 0;
         }
-        return expired.getTime() - System.currentTimeMillis()/1000;
+        return expired.getTime() - System.currentTimeMillis() / 1000;
+    }
+
+    /**
+     * 获取jti
+     *
+     * @param token JWT 令牌
+     * @return jti
+     */
+
+    public String getJti(String token) {
+        Map<String, Object> claims = getTokenClaims(token);
+        if (claims == null || !claims.containsKey("jti")) {
+            return null;
+        }
+        return (String) claims.get("jti");
+    }
+
+    /**
+     * 获取用户名
+     */
+    public String getUsername(String token) {
+        Map<String, Object> claims = getTokenClaims(token);
+        if (claims == null || !claims.containsKey("username")) {
+            throw new BusinessException(ResultCode.T_TOKEN_PARSE_FAILED.getCode(), "token解析失败");
+        }
+        return (String) claims.get("username");
+    }
+
+    /**
+     * 获取用户id
+     */
+
+    public Object getUid(String token) {
+        Map<String, Object> claims = getTokenClaims(token);
+        if (claims == null || !claims.containsKey("uid")) {
+            throw new BusinessException(ResultCode.T_TOKEN_PARSE_FAILED.getCode(), "token解析失败");
+        }
+        return claims.get("uid");
+    }
+
+    /**
+     * 是否是同一设备登录
+     *
+     * @param access  access token
+     * @param refresh refresh token
+     * @return 是否是同一设备登录
+     */
+    public boolean isSameToken(String access, String refresh) {
+        String accessJti = getJti(access);
+        String refreshJti = getJti(refresh);
+        logger.info("access：{}，refresh：{}", accessJti, refreshJti);
+        return accessJti.equals(refreshJti);
+    }
+
+    /**
+     * 判断token是否是refresh token
+     *
+     * @param token JWT 令牌
+     * @return 是否是refresh token
+     */
+    public boolean isRefreshToken(String token) {
+        Map<String, Object> claims = getTokenClaims(token);
+        if (claims == null || !claims.containsKey("sub")) {
+            return false;
+        }
+        return "refresh".equals(claims.get("sub"));
+    }
+
+    /**
+     * 判断token是否是access token
+     *
+     * @param token JWT 令牌
+     * @return 是否是access token
+     */
+    public boolean isAccessToken(String token) {
+        Map<String, Object> claims = getTokenClaims(token);
+        if (claims == null || !claims.containsKey("sub")) {
+            return false;
+        }
+        return "access".equals(claims.get("sub"));
     }
 
 
+    /**
+     * 生成jti
+     *
+     * @return jti
+     */
+    public String generateJti() {
+        return UUID.randomUUID().toString().replace("-", "");
+    }
+
+
+    /**
+     * 获取缓存Token key
+     */
+    public String getCacheToken(Object uid) {
+        return REFRESH_CACHE_KEY + uid;
+    }
+
+    /**
+     * 获取黑名单缓存key
+     */
+
+    public String getBlackKey(String jti, Object uid) {
+        return DARK_REFRESH_CACHE_KEY + uid + jti;
+    }
 }

@@ -198,6 +198,12 @@
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
                         </path>
+                        <!-- 生成 spring-configuration-metadata.json，供 IDE 识别 @ConfigurationProperties 的键。
+                             注意：显式声明 annotationProcessorPaths 后，未列出的处理器不会自动运行 -->
+                        <path>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-configuration-processor</artifactId>
+                        </path>
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>

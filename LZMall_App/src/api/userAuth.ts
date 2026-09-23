@@ -1,5 +1,5 @@
 import type { AuthData, LoginDto, RegisterDto, UserInfo } from "@/types/user";
-import { get, post } from "./http";
+import { get, post } from "../utils/http";
 import type { Response } from "@/types/http";
 
 export const login = async (loginDto: LoginDto): Promise<Response<AuthData>> => {

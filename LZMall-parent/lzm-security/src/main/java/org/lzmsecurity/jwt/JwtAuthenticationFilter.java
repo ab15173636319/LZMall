@@ -1,17 +1,17 @@
 package org.lzmsecurity.jwt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.lzmcommon.properties.RedisProperties;
 import org.lzmcommon.result.ResponseResult;
 import org.lzmcommon.result.ResultCode;
 import org.lzmcommon.utils.RedisUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,8 +21,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -32,6 +32,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private final ObjectMapper objectMapper;
+    private final RedisProperties redisProperties;
 
     /**
      * 认证过滤器
@@ -63,9 +65,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            String username = (String) accessClaims.get("username");
-            Object uid = accessClaims.get("uid");
-            String jti = (String) accessClaims.get("jti");
+            String username = jwtUtils.getUsername(token);
+            Object uid = jwtUtils.getUid(token);
+            String jti = jwtUtils.getJti(token);
 
             // 检查access token是否有效
             if (!StringUtils.hasText(username) || uid == null || !StringUtils.hasText(jti)) {
@@ -78,9 +80,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // 检查access token是否过期
+            // 获取当前请求路径
+            // 检查access token是否过期，排除/user/refreshAccess路径
+            String path = request.getServletPath();
             long remainingTime = jwtUtils.getTokenRemainingTime(token);
-            if (remainingTime <= 0) {
+            if (remainingTime <= 0 && !path.contains("/user/refreshAccess")) {
                 ResponseResult.writeErrorResponse(
                         response,
                         HttpServletResponse.SC_UNAUTHORIZED,
@@ -91,25 +95,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             // 获取refresh token的payload
-            String refreshCacheKey = jwtUtils.getREFRESH_CACHE_KEY() + uid;
+            String refreshCacheKey = jwtUtils.getCacheToken(uid);
             String refreshToken = (String) redisUtils.get(refreshCacheKey);
             if (!StringUtils.hasText(refreshToken)) {
                 ResponseResult.writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
                         ResultCode.T_ACCOUNT_NOT_LOGIN.getCode(), ResultCode.T_ACCOUNT_NOT_LOGIN.getMessage());
                 return;
             }
-
-            Map<String, Object> refreshClaims = jwtUtils.getTokenClaims(refreshToken);
-            // 检查refresh token是否有效
-            if (refreshClaims == null) {
-                ResponseResult.writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
-                        ResultCode.T_TOKEN_EXPIRED.getCode(), ResultCode.T_TOKEN_EXPIRED.getMessage());
-                return;
-            }
-
-            String refreshJti = (String) refreshClaims.get("jti");
             // 检查refresh token是否与access token匹配
-            if (!jti.equals(refreshJti)) {
+            if (!jwtUtils.isSameToken(token, refreshToken)) {
                 ResponseResult.writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
                         ResultCode.T_ACCOUNT_ON_OTHER_DEVICE.getCode(), ResultCode.T_ACCOUNT_ON_OTHER_DEVICE.getMessage());
                 return;
@@ -118,8 +112,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 如果安全上下文为空，说明未认证，需要认证
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                // 查询出用户对象
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                // 获取缓存中的用户信息
+                String userCacheKey = redisProperties.getSaveUserInfo() + username + ": ";
+                UserDetails userDetails = (UserDetails) redisUtils.get(userCacheKey);
+                if (Objects.isNull(userDetails)) {
+                    userDetails = userDetailsService.loadUserByUsername(username);
+                    redisUtils.set(redisProperties.getSaveUserInfo(), userDetails);
+                }
+
                 // 手动组装一个认证对象
                 UsernamePasswordAuthenticationToken upat = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 // 将认证对象放到上下文中
