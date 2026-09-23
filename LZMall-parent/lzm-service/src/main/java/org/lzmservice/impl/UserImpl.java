@@ -1,5 +1,9 @@
 package org.lzmservice.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -7,6 +11,7 @@ import org.lzmcommon.exception.BusinessException;
 import org.lzmcommon.http.CookieSet;
 import org.lzmcommon.result.ResultCode;
 import org.lzmcommon.utils.RedisUtils;
+import org.lzmmodel.model.userModel.dto.UpdateNickname;
 import org.lzmmodel.model.userModel.vo.UserVo;
 import org.lzmsecurity.jwt.JwtUtils;
 import org.lzmservice.mapper.UserMapper;
@@ -19,12 +24,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -138,7 +145,6 @@ public class UserImpl implements UserService {
         Map<String, Object> claims = jwtUtils.getTokenClaims(refreshToken);
         Object uid = jwtUtils.getUid(refreshToken);
 
-
         // 查看当前token是否在黑名单中
         String jti = (String) claims.get("jti");
         String darkCacheKey = jwtUtils.getBlackKey(jti, uid);
@@ -175,6 +181,26 @@ public class UserImpl implements UserService {
         return userVo;
     }
 
+    @Override
+    public void updateNickname(UpdateNickname updateNickname) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            throw new BusinessException(
+                    ResultCode.T_ACCOUNT_NOT_LOGIN.getCode(),
+                    ResultCode.T_ACCOUNT_NOT_LOGIN.getMessage()
+            );
+        }
+        LambdaUpdateWrapper<User> wrapper = Wrappers.lambdaUpdate(User.class);
+        wrapper
+                .set(User::getNickname, updateNickname.getNickname())
+                .eq(User::getId, user.getId());
+        int row = userMapper.update(wrapper);
+        if (row <= 0) {
+            throw new BusinessException(ResultCode.R_BAD_REQUEST.getCode(), "用户不存在或未被修改");
+        }
+
+    }
+
 
     private Optional<User> getUser(String username) {
         try {
@@ -184,6 +210,5 @@ public class UserImpl implements UserService {
             throw new BusinessException(ResultCode.R_INTERNAL_SERVER_ERROR.getCode(), "查询用户失败：系统异常");
         }
     }
-
 
 }

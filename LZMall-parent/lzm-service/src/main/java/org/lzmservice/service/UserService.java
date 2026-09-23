@@ -3,6 +3,7 @@ package org.lzmservice.service;
 import jakarta.servlet.http.HttpServletResponse;
 import org.lzmmodel.model.userModel.dto.LoginDto;
 import org.lzmmodel.model.userModel.dto.RegisterDto;
+import org.lzmmodel.model.userModel.dto.UpdateNickname;
 import org.lzmmodel.model.userModel.vo.UserVo;
 
 import java.util.Map;
@@ -15,4 +16,6 @@ public interface UserService {
     String refreshToken(String refreshToken, HttpServletResponse response);
 
     UserVo getUserInfo(String username);
+
+    void updateNickname(UpdateNickname updateNickname);
 }

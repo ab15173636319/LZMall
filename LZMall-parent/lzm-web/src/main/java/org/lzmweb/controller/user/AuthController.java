@@ -11,6 +11,7 @@ import org.lzmcommon.result.Result;
 import org.lzmcommon.result.ResultCode;
 import org.lzmmodel.model.userModel.dto.LoginDto;
 import org.lzmmodel.model.userModel.dto.RegisterDto;
+import org.lzmmodel.model.userModel.dto.UpdateNickname;
 import org.lzmmodel.model.userModel.vo.UserVo;
 import org.lzmservice.service.UserService;
 import org.springframework.util.StringUtils;
@@ -55,5 +56,11 @@ public class AuthController {
         String username = principal.getName();
         UserVo userVo = userService.getUserInfo(username);
         return Result.success("获取用户信息成功", userVo);
+    }
+
+    @RequestMapping(value = "/updateNickname", method = RequestMethod.PUT)
+    public Result<String> updateNickname(@Valid @RequestBody UpdateNickname updateNickname) {
+        userService.updateNickname(updateNickname);
+        return Result.success("修改昵称成功");
     }
 }
