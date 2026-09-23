@@ -1,6 +1,5 @@
 package org.lzmweb.controller.user;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -13,7 +12,7 @@ import org.lzmmodel.model.userModel.dto.LoginDto;
 import org.lzmmodel.model.userModel.dto.RegisterDto;
 import org.lzmmodel.model.userModel.dto.UpdateNickname;
 import org.lzmmodel.model.userModel.vo.UserVo;
-import org.lzmservice.service.UserService;
+import org.lzmservice.user.service.UserService;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
