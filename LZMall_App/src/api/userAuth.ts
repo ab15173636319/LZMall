@@ -13,6 +13,6 @@ export const getInfo = async (): Promise<Response<UserInfo>> => {
     return await get("/user/info", {})
 }
 
-export const refreshAccess = async (): Promise<Response<String>> => {
-    return await post("/user/refresh", {})
+export const refreshAccess = async (): Promise<Response<string>> => {
+    return await post("/user/refreshAccess", {})
 }
