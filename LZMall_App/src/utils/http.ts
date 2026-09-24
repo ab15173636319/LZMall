@@ -7,11 +7,30 @@ import { refreshAccess } from "@/api/userAuth";
 import router from "@/router";
 
 let isRefreshing = false;
-const waitQueue: Array<(token: string) => void> = [];
+
+interface RefreshQueueItem {
+    resolve: () => void;
+    reject: (reason?: unknown) => void
+}
+const waitQueue: RefreshQueueItem[] = [];
+
+
+
+const clearAuth = () => {
+    const user = useUser()
+    user.accessToken = ""
+    user.userInfo = null
+    if (router.currentRoute.value.name !== 'login') {
+        router.push({ name: "login" })
+    }
+}
+
+
 
 const http = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
     timeout: Number(import.meta.env.VITE_API_TIMEOUT),
+    withCredentials: true,
     headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
@@ -44,42 +63,57 @@ http.interceptors.response.use(
     async (err: AxiosError<Response<any>>) => {
         const status = err.response?.status;
         const message = err.response?.data?.message;
+        const code = err.response?.data?.code;
+        const originConfig = err.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
 
         switch (status) {
             case 401: {
-
-                //执行刷新
-                /*
-                    1. 如果正在刷新，则将请求加入队列等待
-                    2. 如果没有正在刷新，则发起刷新请求
-                    3. 刷新成功后，将队列中的请求执行
-                */
                 const user = useUser();
-                if (err.response?.data.code === 11001 && err.config?.url?.includes("/refresh")) {
+                user.userInfo = null;
+                // 刷新接口自身 401（refreshToken 也废了）或已重试过 → 不再刷新
+                if (!originConfig || originConfig?.url?.includes("/refreshAccess") || originConfig._retry) {
+                    clearAuth()
+                    ElMessage.error(message || "登录已失效，请重新登录")
+                    return Promise.reject(err)
+                }
+                //执行刷新
+                if (code === RESULT_CODE.TOKEN_EXPIRED) {
                     if (!isRefreshing) {
-                        isRefreshing = true
-                        try {
-                            const res = await refreshAccess()
-                            if (res.code === 200) {
-
-                            }
-                        } catch (error) {
-
+                        return new Promise((resolve, reject) => {
+                            waitQueue.push({
+                                resolve: () => resolve(http(originConfig)),
+                                reject: () => reject(err)
+                            })
+                        })
+                    }
+                    isRefreshing = true
+                    try {
+                        const res = await refreshAccess()
+                        if (res.code !== RESULT_CODE.SUCCESS) {
+                            ElMessage.error(res.message || "刷新权限失败，请重新登陆")
                         }
-
+                        const user = useUser();
+                        user.accessToken = res.data;
+                        // 执行队列中的请求
+                        waitQueue.splice(0).forEach(q => q.resolve())
+                        originConfig._retry = true;
+                        return http.request(originConfig);
+                    } catch (e) {
+                        waitQueue.splice(0).forEach(q => q.reject(e))
+                        clearAuth()
+                        ElMessage.error(e instanceof Error ? e.message : "登录已失效，请重新登录");
+                        return Promise.reject(e)
+                    } finally {
+                        isRefreshing = false
                     }
                 }
-
-                // 登录失效：清除本地用户信息并跳转登录页
-                // 注意：这里是 axios 回调，不在 setup() 里，不能用 useRouter()（会返回 undefined）
-                const code = err.response?.data?.code;
-                user.userInfo = null;
-                user.accessToken = '';
-                router.push("/auth");
                 if (code === RESULT_CODE.ACCOUNT_ON_OTHER_DEVICE) {
+                    router.push("/auth");
                     return ElMessage.error("账号已在其它设备登录，请重新登录");
                 }
-                return ElMessage.error(message || "登录已失效，请重新登录");
+                clearAuth()
+                ElMessage.error(message || "登录已失效，请重新登录");
+                return Promise.reject(err)
             }
             case 403:
                 return ElMessage.error(message || "没有权限访问该资源");
@@ -102,4 +136,8 @@ export const post = <T extends Record<string, any>, R>(url: string, data: T): Pr
 
 export const get = <T extends Record<string, any>, R>(url: string, params: Record<string, T>): Promise<Response<R>> => {
     return http.get(url, { params })
+}
+
+export const put = <T extends Record<string, object>, R>(url: string, data: T): Promise<Response<R>> => {
+    return http.put(url, data)
 }
