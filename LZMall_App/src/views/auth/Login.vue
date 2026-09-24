@@ -43,11 +43,13 @@
 import { reactive, ref } from 'vue'
 
 import type { FormInstance, FormRules } from 'element-plus'
+import { useRoute } from 'vue-router'
 import { login } from '@/api/userAuth'
 import { useUser } from '@/store'
 import router from '@/router'
 
 const userAuth = useUser()
+const route = useRoute()
 const ruleFormRef = ref<FormInstance>()
 
 const validateUsername = (_rule: any, value: any, callback: any) => {
@@ -80,7 +82,9 @@ const submitForm = (formEl: FormInstance | undefined) => {
             const res = await login(formDate)
             if (res.code === 200) {
                 userAuth.accessToken = res.data.accessToken
-                router.push({ name: 'index' })
+                // 由路由守卫带过来的来源地址，登录后原路返回
+                const redirect = route.query.redirect
+                router.push(typeof redirect === 'string' && redirect ? redirect : { name: 'index' })
             }
         }
     })

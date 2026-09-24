@@ -13,17 +13,24 @@ export const useUser = defineStore('user', () => {
     }
 
     const getUserInfo = async () => {
+        // 如果已经有用户信息，则不再请求
+        if (userInfo.value) return
         const res = await getInfo()
         console.log(res);
-        
+
         if (res.code !== 200) {
             return
         }
         userInfo.value = res.data
     }
 
+    /** 退出登录：后端暂无登出接口，仅清空本地登录态 */
+    const logout = () => {
+        accessToken.value = ''
+        userInfo.value = null
+    }
 
-    return { userInfo, isLogin, hasRole, accessToken, getUserInfo }
+    return { userInfo, isLogin, hasRole, accessToken, getUserInfo, logout }
 }, {
     persist: {
         pick: ["accessToken"]

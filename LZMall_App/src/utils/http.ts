@@ -78,19 +78,23 @@ http.interceptors.response.use(
                 }
                 //执行刷新
                 if (code === RESULT_CODE.TOKEN_EXPIRED) {
-                    if (!isRefreshing) {
+                    // 已在刷新中：后来的请求进队列等待，避免并发重复刷新
+                    if (isRefreshing) {
                         return new Promise((resolve, reject) => {
                             waitQueue.push({
-                                resolve: () => resolve(http(originConfig)),
-                                reject: () => reject(err)
+                                resolve: () => {
+                                    originConfig._retry = true
+                                    resolve(http(originConfig))
+                                },
+                                reject: (e) => reject(e)
                             })
                         })
                     }
                     isRefreshing = true
                     try {
                         const res = await refreshAccess()
-                        if (res.code !== RESULT_CODE.SUCCESS) {
-                            ElMessage.error(res.message || "刷新权限失败，请重新登陆")
+                        if (!res || res.code !== RESULT_CODE.SUCCESS || !res.data) {
+                            throw new Error(res?.message || "刷新权限失败，请重新登陆")
                         }
                         const user = useUser();
                         user.accessToken = res.data;
@@ -138,6 +142,6 @@ export const get = <T extends Record<string, any>, R>(url: string, params: Recor
     return http.get(url, { params })
 }
 
-export const put = <T extends Record<string, object>, R>(url: string, data: T): Promise<Response<R>> => {
+export const put = <T extends Record<string, any>, R>(url: string, data: T): Promise<Response<R>> => {
     return http.put(url, data)
 }
