@@ -6,8 +6,10 @@ interface IUserInfo {
     phone: string
     avatar: string
     role: string[]
-    create_time: string
-    update_time: string
+    /** 后端 UserVo 为驼峰字段 */
+    createTime: string
+    updateTime: string
+    sex?: "m" | "f" | "n"
 }
 
 export type UserInfo = IUserInfo
@@ -33,3 +35,9 @@ interface IRegisterDto {
 }
 
 export type RegisterDto = IRegisterDto
+
+interface IUpdateNicknameDto {
+    nickname: string
+}
+
+export type UpdateNicknameDto = IUpdateNicknameDto
