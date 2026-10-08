@@ -25,6 +25,7 @@
         <module>lzm-web</module>
         <module>lzm-start</module>
         <module>lzm-model</module>
+        <module>lzm-files</module>
     </modules>
 
     <properties>
@@ -39,7 +40,7 @@
         <springdoc-openapi.version>2.1.1</springdoc-openapi.version>
         <mybatis-plus.version>3.5.17</mybatis-plus.version>
         <druid.version>1.2.23</druid.version>
-        <minio.version>8.5.11</minio.version>
+        <minio.version>8.6.0</minio.version>
         <jjwt.version>0.12.5</jjwt.version>
         <hutool.version>5.8.32</hutool.version>
         <wechatpay-java.version>0.2.12</wechatpay-java.version>
@@ -86,6 +87,11 @@
             <dependency>
                 <groupId>org</groupId>
                 <artifactId>lzm-model</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org</groupId>
+                <artifactId>lzm-files</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
