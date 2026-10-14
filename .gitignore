@@ -3,3 +3,5 @@
 .codex/*
 .codebuddy/*
 .idea/*
+*/.idea/*
+*/target/*

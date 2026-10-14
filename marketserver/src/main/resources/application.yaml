@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: marketserver
+  data:
+    redis:
+      password: 123456
+      host: localhost
+      port: 6379
+  datasource:
+    url: jdbc:mysql://localhost:3306/lzmall?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
+
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+app:
+  jwt:
+    secret: oisdfh27yr598eyhfg9ihdg9uy34985r798weufijhfg91
+    refresh-token-expiration: 6048000000 # 7天
+    access-token-expiration: 3600000000 # 1小时
+    refresh-token-key: jwt:token:%s
+    refresh-token-black-key: jwt:token-black:%s
+    cookie-key: JT
+  security:
+    ignores:
+      - /auth/login
+      - /auth/refresh
+      - /auth/register
+      - /test/**
+
