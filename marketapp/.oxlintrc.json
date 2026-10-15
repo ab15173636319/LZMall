@@ -1,8 +1,29 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
+  "plugins": [
+    "react",
+    "typescript",
+    "oxc"
+  ],
   "rules": {
     "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+    "react/only-export-components": [
+      "warn",
+      {
+        "allowConstantExport": true
+      }
+    ],
+    "no-else-return": "error",
+    "max-depth": [
+      "error",
+      5
+    ],
+    "max-lines": [
+      "error",
+      500
+    ],
+    "prefer-object-spread": "error",
+    "prefer-object-has-own": "error",
+    "prefer-promise-reject-errors": "error",
   }
 }

@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {}
+
+@layer components {
+    .full-screen {
+        @apply w-full min-h-dvh;
+    }
+
+    .center-x {
+        @apply flex justify-center
+    }
+
+    .center-y {
+        @apply flex items-center
+    }
+
+    .center-xy {
+        @apply flex items-center justify-center
+    }
+}
