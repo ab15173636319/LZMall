@@ -5,6 +5,7 @@ import cn.hutool.extra.spring.SpringUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
+import org.app.marketserver.common.exception.BusinessException;
 import org.app.marketserver.mapper.SysRefreshMapper;
 import org.app.marketserver.pojo.entity.SysRefreshToken;
 import org.app.marketserver.security.LoginUser;
@@ -52,7 +53,7 @@ public class RefreshTokenService {
         Claims claims = jwtUtil.parse(refreshToken);
 
         if (!"refresh".equals(claims.get("type"))) {
-            throw new BadCredentialsException("刷新token类型错误");
+            throw new BusinessException("刷新token类型错误");
         }
 
         Long userId = claims.get("userId", Long.class);
@@ -65,7 +66,7 @@ public class RefreshTokenService {
         );
 
         if (record == null || record.getExpire_time().before(DateTime.now())) {
-            throw new BadCredentialsException("刷新令牌失效");
+            throw new BusinessException("刷新令牌失效");
         }
 
         record.setRevoked(1);

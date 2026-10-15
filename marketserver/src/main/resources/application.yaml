@@ -11,6 +11,10 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: 123456
+  jackson:
+    # 禁止null值
+    default-property-inclusion: non_null
+
 
 
 mybatis-plus:
@@ -29,6 +33,8 @@ app:
     ignores:
       - /auth/login
       - /auth/refresh
-      - /auth/register
+      - /user/register
       - /test/**
 
+server:
+  port: 9527

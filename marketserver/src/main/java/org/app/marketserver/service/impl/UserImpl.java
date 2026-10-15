@@ -44,7 +44,7 @@ public class UserImpl implements UserService {
         if (user != null) {
             throw new BusinessException("用户名已存在");
         }
-
+ 
         SysUser sysUser = new SysUser();
         sysUser.setUsername(registerDto.getUsername());
         sysUser.setPassword(passwordEncoder.encode(registerDto.getPassword()));
@@ -66,7 +66,7 @@ public class UserImpl implements UserService {
         LoginUser user = (LoginUser) authentication.getPrincipal();
 
         if (user == null) {
-            throw new BusinessException("登录失败，用户名或密码错误");
+            throw new BusinessException("登录失败，用户名或密码错误666");
         }
 
         String accessToken = jwtUtil.generateAccessToken(user);

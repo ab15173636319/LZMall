@@ -5,6 +5,10 @@ import org.app.marketserver.common.result.ResponseCode;
 import org.app.marketserver.common.result.Result;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -23,6 +27,12 @@ public class GlobalExceptionHandler {
     public Result<String> handleBusinessException(BusinessException e) {
         log.warn("业务异常：code={}, message={}", e.getCode(), e.getMessage());
         return Result.error(e.getCode(), e.getMessage());
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public Result<String> handleUsernameNotFoundException(UsernameNotFoundException e) {
+        log.warn("用户名不存在：{}", e.getMessage());
+        return Result.error(404, e.getMessage());
     }
 
 
@@ -90,4 +100,20 @@ public class GlobalExceptionHandler {
         log.error("系统异常", e);
         return Result.error(ResponseCode.SYSTEM_ERROR);
     }
+
+    /**
+     * 认证失败：登录校验（用户名/密码错误）、账号禁用等
+     * 由 AuthenticationManager 抛出，必须在进入兜底 Exception 之前拦下，
+     * 否则会被当成 40000 系统异常返回并打印完整堆栈。
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    public Result<String> handleAuthenticationException(AuthenticationException e) {
+        if (e instanceof DisabledException || e instanceof LockedException) {
+            log.warn("账号状态异常：{}", e.getMessage());
+            return Result.error(ResponseCode.AUTH_ACCOUNT_DISABLED);
+        }
+        log.warn("认证失败：{}", e.getMessage());
+        return Result.error(ResponseCode.AUTH_FAILED);
+    }
+
 }

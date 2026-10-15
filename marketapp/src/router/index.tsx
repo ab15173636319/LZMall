@@ -1,10 +1,19 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter } from "react-router";
+import Home from "../views/home";
+import NotFound from "../views/error/notFound";
+import { auth } from "./module/auth";
 
-import Home from "../views/home"
+
+
 
 export const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Home />
-  },
-]);
+    {
+        path: "/",
+        Component: Home
+    },
+    ...auth,
+    {
+        path: "*",
+        Component: NotFound
+    }
+])
